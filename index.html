@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avant le Garage</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:#f5f6f8;
+  color:#17191c;
+}
+header{
+  background:#111;
+  color:white;
+  padding:18px 20px;
+  font-weight:800;
+  font-size:20px;
+}
+main{
+  max-width:650px;
+  margin:auto;
+  padding:35px 18px 70px;
+}
+.badge{
+  display:inline-block;
+  background:#e8f7ee;
+  color:#16783c;
+  padding:8px 12px;
+  border-radius:20px;
+  font-weight:700;
+  font-size:13px;
+}
+h1{
+  font-size:38px;
+  line-height:1.05;
+  margin:18px 0 14px;
+}
+.subtitle{
+  color:#62676d;
+  font-size:18px;
+  line-height:1.5;
+}
+.card{
+  background:white;
+  border-radius:20px;
+  padding:22px;
+  margin-top:25px;
+  box-shadow:0 5px 25px rgba(0,0,0,.06);
+}
+label{
+  display:block;
+  font-weight:700;
+  margin:16px 0 7px;
+}
+input,select,textarea{
+  width:100%;
+  padding:15px;
+  border:1px solid #d9dde2;
+  border-radius:12px;
+  font-size:16px;
+  background:white;
+}
+textarea{
+  min-height:120px;
+  resize:vertical;
+}
+button{
+  width:100%;
+  margin-top:22px;
+  padding:17px;
+  border:0;
+  border-radius:14px;
+  background:#111;
+  color:white;
+  font-size:17px;
+  font-weight:800;
+  cursor:pointer;
+}
+.info{
+  margin-top:25px;
+  padding:18px;
+  background:#fff8df;
+  border-radius:15px;
+  font-size:14px;
+  line-height:1.5;
+}
+#result{
+  display:none;
+}
+.price{
+  color:#168542;
+  font-size:25px;
+  font-weight:900;
+}
+.step{
+  padding:15px 0;
+  border-bottom:1px solid #eee;
+}
+.step:last-child{
+  border-bottom:0;
+}
+.warning{
+  background:#fff0f0;
+  padding:15px;
+  border-radius:12px;
+  color:#9d2020;
+  margin-top:18px;
+  font-weight:600;
+}
+.small{
+  color:#74787e;
+  font-size:13px;
+  line-height:1.5;
+}
+</style>
+</head>
+
+<body>
+
+<header>🚗 Avant le Garage</header>
+
+<main>
+
+<span class="badge">Économisez avant de réparer</span>
+
+<h1>Ne paie pas 500 € si 50 € peuvent suffire.</h1>
+
+<p class="subtitle">
+Décris le problème de ta voiture. On commence par les vérifications gratuites et les solutions les moins coûteuses.
+</p>
+
+<div class="card" id="formCard">
+
+<h2>Quel est ton problème ?</h2>
+
+<label>Marque</label>
+<input id="brand" placeholder="Ex : Peugeot">
+
+<label>Modèle</label>
+<input id="model" placeholder="Ex : 208">
+
+<label>Année</label>
+<input id="year" type="number" placeholder="Ex : 2021">
+
+<label>Carburant</label>
+<select id="fuel">
+<option>Essence</option>
+<option>Diesel</option>
+<option>Hybride</option>
+<option>Électrique</option>
+<option>GPL</option>
+</select>
+
+<label>Kilométrage</label>
+<input id="km" type="number" placeholder="Ex : 85000">
+
+<label>Que fait la voiture ?</label>
+<textarea id="problem" placeholder="Ex : La voiture ne démarre plus. Les voyants s'allument mais j'entends seulement un clic quand je tourne la clé."></textarea>
+
+<label>Code OBD (si tu en as un)</label>
+<input id="obd" placeholder="Ex : P0300">
+
+<button onclick="diagnose()">Chercher la solution la moins chère</button>
+
+</div>
+
+<div class="card" id="result">
+
+<span class="badge">À vérifier en premier</span>
+
+<h2 id="resultTitle">Résultat</h2>
+
+<p class="price" id="price">0 €</p>
+
+<div id="steps"></div>
+
+<div class="warning">
+⚠️ Ce site fournit une aide indicative et ne remplace pas un diagnostic mécanique. En cas de problème de freinage, direction, surchauffe, fumée importante ou risque d'incendie, ne continue pas à rouler.
+</div>
+
+<button onclick="restart()">Tester un autre problème</button>
+
+</div>
+
+<div class="info">
+<strong>Notre principe :</strong><br><br>
+1. Vérifier ce qui peut être contrôlé gratuitement.<br>
+2. Tester les solutions les moins coûteuses.<br>
+3. Remplacer une pièce seulement si nécessaire.<br>
+4. Aller au garage lorsque le problème nécessite réellement un professionnel.
+</div>
+
+<p class="small">
+Avant le Garage ne garantit pas l'identification d'une panne. Les résultats dépendent des informations fournies.
+</p>
+
+</main>
+
+<script>
+
+function diagnose(){
+
+let problem=document.getElementById("problem").value.toLowerCase();
+let brand=document.getElementById("brand").value;
+let model=document.getElementById("model").value;
+
+if(problem.trim()===""){
+ alert("Décris d'abord le problème de ta voiture.");
+ return;
+}
+
+let title="";
+let price="";
+let steps="";
+
+if(
+ problem.includes("démarre") ||
+ problem.includes("demarre") ||
+ problem.includes("batterie")
+){
+
+ title="Commence par vérifier la batterie";
+ price="0 € à vérifier d'abord";
+
+ steps=`
+ <div class="step">
+ <strong>1 — Gratuit</strong><br>
+ Vérifie si les phares et le tableau de bord s'allument normalement.
+ </div>
+
+ <div class="step">
+ <strong>2 — Gratuit</strong><br>
+ Vérifie que les cosses de batterie sont correctement serrées et ne présentent pas une forte oxydation.
+ </div>
+
+ <div class="step">
+ <strong>3 — Test peu coûteux</strong><br>
+ Fais tester la batterie avant de remplacer un démarreur ou une autre pièce coûteuse.
+ </div>
+
+ <div class="step">
+ <strong>4 — Si le problème continue</strong><br>
+ Un diagnostic électrique ou mécanique peut devenir nécessaire.
+ </div>`;
+}
+
+else if(
+ problem.includes("pneu") ||
+ problem.includes("pression")
+){
+
+ title="Commence par contrôler les pneus";
+ price="0 € à quelques euros";
+
+ steps=`
+ <div class="step">
+ <strong>1 — Gratuit</strong><br>
+ Inspecte visuellement le pneu : clou, coupure, déformation ou perte importante de pression.
+ </div>
+
+ <div class="step">
+ <strong>2 — Vérification</strong><br>
+ Contrôle la pression selon les valeurs recommandées pour ton véhicule.
+ </div>
+
+ <div class="step">
+ <strong>3 — Si le pneu perd encore de l'air</strong><br>
+ Fais rechercher une crevaison avant d'acheter directement un pneu neuf.
+ </div>`;
+}
+
+else if(
+ problem.includes("chauffe") ||
+ problem.includes("température") ||
+ problem.includes("temperature")
+){
+
+ title="Attention : possible problème de refroidissement";
+ price="Ne dépense rien avant vérification";
+
+ steps=`
+ <div class="step">
+ <strong>1 — Sécurité</strong><br>
+ Si le moteur surchauffe fortement, arrête-toi dans un endroit sûr.
+ </div>
+
+ <div class="step">
+ <strong>2 — Ne jamais ouvrir à chaud</strong><br>
+ N'ouvre pas le bouchon du circuit de refroidissement lorsque le moteur est chaud.
+ </div>
+
+ <div class="step">
+ <strong>3 — Une fois le véhicule refroidi</strong><br>
+ Un niveau anormal de liquide ou une fuite visible peut orienter le diagnostic.
+ </div>
+
+ <div class="step">
+ <strong>4 — Professionnel</strong><br>
+ Une surchauffe persistante peut endommager gravement le moteur : fais contrôler le véhicule.
+ </div>`;
+}
+
+else if(
+ problem.includes("frein") ||
+ problem.includes("freine")
+){
+
+ title="Problème de freinage : priorité à la sécurité";
+ price="Contrôle professionnel recommandé";
+
+ steps=`
+ <div class="step">
+ <strong>1 — Ne prends pas de risque</strong><br>
+ Si le freinage est faible, inhabituel ou si une alerte rouge apparaît, évite de rouler.
+ </div>
+
+ <div class="step">
+ <strong>2 — Pas de réparation au hasard</strong><br>
+ Les freins sont un élément de sécurité. Fais identifier précisément la cause avant d'acheter des pièces.
+ </div>`;
+}
+
+else{
+
+ title="On commence par les vérifications gratuites";
+ price="0 € pour commencer";
+
+ steps=`
+ <div class="step">
+ <strong>1 — Note précisément les symptômes</strong><br>
+ Quand le problème apparaît-il : moteur froid, chaud, accélération, freinage ou démarrage ?
+ </div>
+
+ <div class="step">
+ <strong>2 — Vérifie les voyants</strong><br>
+ Note les voyants présents au tableau de bord et tout code OBD disponible.
+ </div>
+
+ <div class="step">
+ <strong>3 — N'achète aucune pièce au hasard</strong><br>
+ Sans suffisamment d'informations, remplacer directement une pièce peut coûter de l'argent sans résoudre la panne.
+ </div>
+
+ <div class="step">
+ <strong>Cette V1 est encore en développement.</strong><br>
+ De nouveaux diagnostics seront ajoutés progressivement.
+ </div>`;
+}
+
+document.getElementById("resultTitle").innerText=
+brand+" "+model+" — "+title;
+
+document.getElementById("price").innerText=price;
+document.getElementById("steps").innerHTML=steps;
+
+document.getElementById("formCard").style.display="none";
+document.getElementById("result").style.display="block";
+
+window.scrollTo({top:0,behavior:"smooth"});
+
+}
+
+function restart(){
+ document.getElementById("result").style.display="none";
+ document.getElementById("formCard").style.display="block";
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+</script>
+
+</body>
+</html>
